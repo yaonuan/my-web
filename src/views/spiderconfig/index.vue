@@ -18,8 +18,8 @@
       <el-table-column prop="createTime" label="创建时间"></el-table-column>
       <el-table-column fixed="right" width="380" label="操作">
         <template slot-scope="scope">
-          <el-button size="small" type="success" :disabled="!!scope.row.hasTarget" @click="simLoginHandle(scope.row.linkId)">模拟登录</el-button>
-          <el-button size="small" type="primary" :disabled="!scope.row.hasTarget" @click="spiderHandle(scope.row.linkId, scope.row.url)">单点采集</el-button>
+          <el-button size="small" v-if="scope.row.isLogin" type="success" :disabled="!!scope.row.hasTarget" @click="simLoginHandle(scope.row.linkId)">模拟登录</el-button>
+          <el-button size="small" type="primary" :disabled="(!scope.row.hasTarget && !!scope.row.isLogin)" @click="spiderHandle(scope.row.linkId, scope.row.url)">单点采集</el-button>
           <el-button size="small" icon="el-icon-edit" @click="addOrUpdateHandle(scope.row.linkId)">编辑</el-button>
           <el-button size="small" icon="el-icon-delete" @click="deleteHandle(scope.row.linkId)">删除</el-button>
         </template>
