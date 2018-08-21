@@ -20,6 +20,7 @@
         <el-input v-model="dataForm.informationName" :readonly="!isEdit" placeholder="请输入所在信息资源名称"></el-input>
       </el-form-item>
       <!-- <div :disabled ="!isEdit" > -->
+      <div :disabled="isEdit">
       <el-form-item   v-if="isEdit" label="类型" prop="type">
 				<el-input v-model="dataForm.label" v-if="!isEdit" :readonly="!isEdit" placeholder="请选择类型"></el-input>
 				<el-select v-model="dataForm.type" v-else placeholder="请选择类型" style="width: 100%">
@@ -31,6 +32,11 @@
 					</el-option>
 				</el-select>
       </el-form-item>
+      </div>
+      <el-form-item v-if="!isEdit" label="类型" prop="type">
+        <el-input v-if="!isEdit" v-model="dataForm.type" :readonly="!!isEdit"></el-input>
+      </el-form-item>
+
       <el-form-item  label="项目长度" prop="len">
         <el-input v-model="dataForm.len" :readonly="!isEdit" placeholder="请输入长度"></el-input>
       </el-form-item>
