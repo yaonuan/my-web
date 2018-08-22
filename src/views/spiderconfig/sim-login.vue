@@ -32,6 +32,7 @@ export default {
 		return {
 			id: '',
 			content: '',
+			button: '',
 			publicParent: '',
 			isFullScreen: false,
 			visible: false,
@@ -43,6 +44,7 @@ export default {
 		// 初始化
 		init(id) {
 			this.id = id;
+			this.button = '';
 			this.publicParent = '';
 			this.visible = true;
 			this.dialogLoading = true;
@@ -156,37 +158,6 @@ export default {
 						);
 					}
 
-					// 如果登录按钮是图片
-					if (
-						tagName == 'IMG' &&
-						element.hasAttribute('onclick') &&
-						(element.alt == '普通登录' || element.alt == '登录')
-					) {
-						params.loginButtonXpath = getXPathForElement(element).replace(
-							'html[1]',
-							'html'
-						);
-					}
-
-					// 登录按钮
-					// 这里以下几种情况：
-					// 1）元素是button
-					// 2）元素是input，并且类型是submit或button
-					// 3）元素是input，但没有类型，这种情况就去判断类名是否有btn了
-					// 4）元素是a，类名有btn
-					if (
-						tagName == 'BUTTON' ||
-						(tagName == 'INPUT' &&
-							(element.type == 'submit' || element.type == 'button')) ||
-						(tagName == 'INPUT' && this.hasClass(element, 'btn')) ||
-						(tagName == 'A' && this.hasClass(element, 'btn'))
-					) {
-						params.loginButtonXpath = getXPathForElement(element).replace(
-							'html[1]',
-							'html'
-						);
-					}
-
 					// 验证码图片
 					if (tagName == 'IMG') {
 						params.verifycodeUrl = element.src;
@@ -209,6 +180,13 @@ export default {
 					return;
 				}
 
+				// 登录按钮
+				console.log('button', this.button);
+				params.loginButtonXpath = getXPathForElement(this.button).replace(
+					'html[1]',
+					'html'
+				);
+
 				return params;
 			}
 		},
@@ -218,7 +196,7 @@ export default {
 		listenElement() {
 			const self = this;
 			const iframe = this.$refs.iframe;
-			console.log('iframe', iframe);
+			// console.log('iframe', iframe);
 
 			if (iframe) {
 				const doc = iframe.contentWindow.document;
@@ -253,67 +231,30 @@ export default {
 						};
 					}
 
-					// 如果登录按钮是图片形式
-					if (
-						tagName == 'IMG' &&
-						element.hasAttribute('onclick') &&
-						(element.alt == '普通登录' || element.alt == '登录')
-					) {
-						// 按钮点击事件
-						element.onclick = function(event) {
-							// 阻止默认提交事件
-							event.preventDefault();
+					// 根据约定的规则，最后一次点击是按钮
+					element.onclick = function(event) {
+						// 阻止默认提交事件
+						event.preventDefault();
 
-							var e =
-								event || window.event || arguments.callee.caller.arguments[0];
+						var e =
+							event || window.event || arguments.callee.caller.arguments[0];
 
-							// 把所有的祖先元素保存到paths临时数组中，然后只比较最后一个
-							if (e) {
-								Buttonpaths.push(e.path);
-								self.getPublicParent(
-									paths[paths.length - 1],
-									Buttonpaths[Buttonpaths.length - 1]
-								);
-							}
-						};
-					}
-
-					// 登录按钮
-					// 这里以下几种情况：
-					// 1）元素是button
-					// 2）元素是input，并且类型是submit或button
-					// 3）元素是input，但没有类型，这种情况就去判断类名是否有btn了
-					// 4）元素是a，类名有btn
-					if (
-						tagName == 'BUTTON' ||
-						(tagName == 'INPUT' &&
-							(element.type == 'submit' || element.type == 'button')) ||
-						(tagName == 'INPUT' && this.hasClass(element, 'btn')) ||
-						(tagName == 'A' && this.hasClass(element, 'btn'))
-					) {
-						// 按钮点击事件
-						element.onclick = function(event) {
-							// 阻止默认提交事件
-							event.preventDefault();
-
-							var e =
-								event || window.event || arguments.callee.caller.arguments[0];
-
-							// 把所有的祖先元素保存到paths临时数组中，然后只比较最后一个
-							if (e) {
-								Buttonpaths.push(e.path);
-								self.getPublicParent(
-									paths[paths.length - 1],
-									Buttonpaths[Buttonpaths.length - 1]
-								);
-							}
-						};
-					}
+						// 把所有的祖先元素保存到paths临时数组中，然后只比较最后一个
+						if (e) {
+							const button = e.target || e.srcElement;
+							Buttonpaths.push(e.path);
+							self.getPublicParent(
+								paths[paths.length - 1],
+								Buttonpaths[Buttonpaths.length - 1],
+								button
+							);
+						}
+					};
 				}
 			}
 		},
 		// 遍历input和button元素的祖先元素，获取最近的公共祖先元素
-		getPublicParent(paths, Buttonpaths) {
+		getPublicParent(paths, Buttonpaths, button) {
 			// console.log('paths', paths);
 			// console.log('Buttonpaths', Buttonpaths);
 			if (paths && paths.length > 0 && Buttonpaths && Buttonpaths.length > 0) {
@@ -323,6 +264,7 @@ export default {
 						const bpath = Buttonpaths[j];
 						if (path == bpath) {
 							this.publicParent = path;
+							this.button = button;
 							return false;
 						}
 					}
@@ -352,6 +294,95 @@ export default {
 				}
 			}
 		},
+		getParamsBackup() {
+			// 如果登录按钮是图片
+			if (
+				tagName == 'IMG' &&
+				element.hasAttribute('onclick') &&
+				(element.alt == '普通登录' || element.alt == '登录')
+			) {
+				params.loginButtonXpath = getXPathForElement(element).replace(
+					'html[1]',
+					'html'
+				);
+			}
+
+			// 登录按钮
+			// 这里以下几种情况：
+			// 1）元素是button
+			// 2）元素是input，并且类型是submit或button
+			// 3）元素是input，但没有类型，这种情况就去判断类名是否有btn了
+			// 4）元素是a，类名有btn
+			if (
+				tagName == 'BUTTON' ||
+				(tagName == 'INPUT' &&
+					(element.type == 'submit' || element.type == 'button')) ||
+				(tagName == 'INPUT' && this.hasClass(element, 'btn')) ||
+				(tagName == 'A' && this.hasClass(element, 'btn'))
+			) {
+				params.loginButtonXpath = getXPathForElement(element).replace(
+					'html[1]',
+					'html'
+				);
+			}
+		},
+		listenElementBackup() {
+			// 如果登录按钮是图片形式
+			if (
+				tagName == 'IMG' &&
+				element.hasAttribute('onclick') &&
+				(element.alt == '普通登录' || element.alt == '登录')
+			) {
+				// 按钮点击事件
+				element.onclick = function(event) {
+					// 阻止默认提交事件
+					event.preventDefault();
+
+					var e = event || window.event || arguments.callee.caller.arguments[0];
+
+					// 把所有的祖先元素保存到paths临时数组中，然后只比较最后一个
+					if (e) {
+						Buttonpaths.push(e.path);
+						self.getPublicParent(
+							paths[paths.length - 1],
+							Buttonpaths[Buttonpaths.length - 1]
+						);
+					}
+				};
+			}
+
+			// 登录按钮
+			// 这里以下几种情况：
+			// 1）元素是button
+			// 2）元素是input，并且类型是submit或button
+			// 3）元素是input，但没有类型，这种情况就去判断类名是否有btn了
+			// 4）元素是a，类名有btn
+			if (
+				tagName == 'BUTTON' ||
+				(tagName == 'INPUT' &&
+					(element.type == 'submit' || element.type == 'button')) ||
+				(tagName == 'INPUT' && this.hasClass(element, 'btn')) ||
+				(tagName == 'A' && this.hasClass(element, 'btn'))
+			) {
+				// 按钮点击事件
+				element.onclick = function(event) {
+					// 阻止默认提交事件
+					event.preventDefault();
+
+					var e = event || window.event || arguments.callee.caller.arguments[0];
+
+					// 把所有的祖先元素保存到paths临时数组中，然后只比较最后一个
+					if (e) {
+						Buttonpaths.push(e.path);
+						self.getPublicParent(
+							paths[paths.length - 1],
+							Buttonpaths[Buttonpaths.length - 1]
+						);
+					}
+				};
+			}
+		},
+		// 判断是否有这个类名
 		hasClass(element, cls) {
 			return (' ' + element.className + ' ').indexOf(' ' + cls + ' ') > -1;
 		}
