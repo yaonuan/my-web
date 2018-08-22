@@ -19,7 +19,7 @@
       <el-button type="success" v-if="isFullScreen" @click="isFullScreen = false" style="float:left;">退出全屏</el-button>
       <el-button type="success" v-else @click="isFullScreen = true" style="float:left;">全屏展示</el-button>
       <el-button @click="visible = false;">取消</el-button>
-      <el-button type="primary" @click="loginPageSubmit()">确定</el-button>
+      <el-button type="primary" :disabled="isDisabled" :loading="isLoading" @click="loginPageSubmit()">{{isLoading ? "登录中" : "确定"}}</el-button>
     </span>
   </el-dialog>
 </template>
@@ -36,7 +36,9 @@ export default {
 			publicParent: '',
 			isFullScreen: false,
 			visible: false,
-			dialogLoading: false
+			dialogLoading: false,
+			isDisabled: true,
+			isLoading: false
 		};
 	},
 	mounted() {},
@@ -48,12 +50,18 @@ export default {
 			this.publicParent = '';
 			this.visible = true;
 			this.dialogLoading = true;
+			this.isDisabled = true;
+
 			this.$nextTick(() => {
 				API.spiderconfig.getLoginPage({ id: id }).then(({ data }) => {
 					console.log('data', data);
 					if (data && data.code === 0) {
-						this.content = data.contents;
+						this.content = data.contents.replace(
+							/<script.*?>.*?<\/script>/gi,
+							''
+						);
 						this.renderContent();
+						this.isDisabled = false;
 					}
 					this.dialogLoading = false;
 				});
@@ -107,6 +115,9 @@ export default {
 				return;
 			}
 
+			this.isLoading = true;
+			this.dialogLoading = true;
+
 			API.spiderconfig.getLoginParams(params).then(({ data }) => {
 				if (data && data.code === 0) {
 					this.$message({
@@ -121,6 +132,9 @@ export default {
 				} else {
 					this.$message.error(data.msg);
 				}
+
+				this.isLoading = false;
+				this.dialogLoading = false;
 			});
 		},
 		// 获取表单子元素的xpath，并返回一个params属性集
@@ -144,13 +158,20 @@ export default {
 					// 一般情况下用户名是在第一位,验证码是第二位
 					if (
 						tagName == 'INPUT' &&
-						(element.type == 'text' || element.type == 'tel')
+						(element.type == 'text' || element.type == 'tel') &&
+						element.clientWidth > 0 &&
+						element.clientHeight > 0
 					) {
 						inputs.push(element);
 					}
 
 					// 密码框
-					if (tagName == 'INPUT' && element.type == 'password') {
+					if (
+						tagName == 'INPUT' &&
+						element.type == 'password' &&
+						element.clientWidth > 0 &&
+						element.clientHeight > 0
+					) {
 						params.password = element.value;
 						params.passwordXpath = getXPathForElement(element).replace(
 							'html[1]',
@@ -200,26 +221,31 @@ export default {
 
 			if (iframe) {
 				const doc = iframe.contentWindow.document;
+				const inputs = doc.getElementsByTagName('input');
 				const tags = doc.getElementsByTagName('*');
 				const paths = [];
 				const Buttonpaths = [];
 
-				for (let i = 0; i < tags.length; i++) {
-					const element = tags[i];
+				console.log('inputs', inputs);
+				console.log('inputs.length', inputs.length);
+				for (let i = 0; i < inputs.length; i++) {
+					const element = inputs[i];
 					const tagName = element.tagName;
-
+					console.log('inputselement', element);
 					// 筛选出输入框类型
 					if (
 						tagName == 'INPUT' &&
 						(element.type == 'text' ||
 							element.type == 'tel' ||
-							element.type == 'password')
+							element.type == 'password') &&
+						element.clientWidth > 0 &&
+						element.clientHeight > 0
 					) {
 						// 监听键盘按下事件
 						element.onkeydown = function(event) {
 							var e =
 								event || window.event || arguments.callee.caller.arguments[0];
-
+							console.log('e', e);
 							// 把所有的祖先元素保存到paths临时数组中，然后只比较第一个
 							if (e) {
 								paths.push(e.path);
@@ -230,6 +256,11 @@ export default {
 							}
 						};
 					}
+				}
+
+				for (let i = 0; i < tags.length; i++) {
+					const element = tags[i];
+					const tagName = element.tagName;
 
 					// 根据约定的规则，最后一次点击是按钮
 					element.onclick = function(event) {
@@ -255,8 +286,8 @@ export default {
 		},
 		// 遍历input和button元素的祖先元素，获取最近的公共祖先元素
 		getPublicParent(paths, Buttonpaths, button) {
-			// console.log('paths', paths);
-			// console.log('Buttonpaths', Buttonpaths);
+			console.log('paths', paths);
+			console.log('Buttonpaths', Buttonpaths);
 			if (paths && paths.length > 0 && Buttonpaths && Buttonpaths.length > 0) {
 				for (let i = 0; i < paths.length; i++) {
 					const path = paths[i];
