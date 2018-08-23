@@ -15,7 +15,10 @@
       </el-form-item>
       <el-form-item label="是否有登录页" prop="isLogin">
         <el-radio v-model="dataForm.isLogin" :label="1">有</el-radio>
-        <el-radio v-model="dataForm.isLogin" :label="0">无</el-radio>
+        <el-radio v-model="dataForm.isLogin" @change='clearLoginUrl' :label="0">无</el-radio>
+      </el-form-item>
+      <el-form-item v-if="dataForm.isLogin" label="登录页url" prop="loginUrl">
+        <el-input v-model="dataForm.loginUrl" placeholder="请输入登录页的网址"></el-input>
       </el-form-item>
       <el-form-item label="任务描述" prop="remarks">
         <el-input v-model="dataForm.remarks" placeholder="请输入任务描述" type="textarea"></el-input>
@@ -49,7 +52,8 @@ export default {
 				module: '',
 				url: '',
 				isLogin: '',
-				remarks: ''
+				remarks: '',
+				loginUrl: ''
 			},
 			dataRule: {
 				system: [
@@ -63,6 +67,9 @@ export default {
 				],
 				isLogin: [
 					{ required: true, message: '请选择是否有登录页', trigger: 'blur' }
+				],
+				loginUrl: [
+					{ required: true, validator: validateAcquisitionURL, trigger: 'blur' }
 				]
 			}
 		};
@@ -82,6 +89,7 @@ export default {
 							this.dataForm.system = data.list.system;
 							this.dataForm.module = data.list.module;
 							this.dataForm.url = data.list.url;
+							this.dataForm.loginUrl = data.list.loginUrl;
 							this.dataForm.isLogin = data.list.isLogin;
 							this.dataForm.remarks = data.list.remarks;
 						}
@@ -89,18 +97,31 @@ export default {
 				}
 			});
 		},
+		clearLoginUrl(){
+			this.dataForm.loginUrl = '';
+		},
 		// 表单提交
 		dataFormSubmit() {
 			this.$refs['dataForm'].validate(valid => {
 				if (valid) {
+					/*if (!isLogin) {
+						this.dataForm.loginUrl = ''
+					}else{
+						this.dataForm.loginUrl = this.dataForm.loginUrl
+					}*/
+					
+					console.log("this")
 					var params = {
 						linkId: this.dataForm.linkId || undefined,
 						system: this.dataForm.system,
 						module: this.dataForm.module,
 						url: this.dataForm.url,
 						isLogin: this.dataForm.isLogin,
-						remarks: this.dataForm.remarks
+						loginUrl: this.dataForm.loginUrl,
+						remarks: this.dataForm.remarks,
+						
 					};
+					console.log('params',params);
 
 					var tick = !this.dataForm.linkId
 						? API.spiderconfig.add(params)

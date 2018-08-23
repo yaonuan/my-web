@@ -14,6 +14,23 @@ export function list (params) {
   })
 }
 
+export function test(id){
+  return request({
+    url: requestUrl('/api/linkInfo/test' + (isInteger(id) ? `/${id}` : '')),
+    method: 'get',
+    params:requestParam({},'get')
+  })
+}
+
+//手动插入cookie的值
+export function addByCookie(params){
+  return request({
+    url: requestUrl('/api/linkInfo/hand_cookie'),
+    method: 'post',
+    data:requestParam(params)
+  })
+}
+
 // 获取采集站点配置信息
 export function info (id) {
   return request({

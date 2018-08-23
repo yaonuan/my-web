@@ -16,11 +16,12 @@
       <el-table-column prop="module" label="模块名称"></el-table-column>
       <el-table-column prop="url" label="采集网址"></el-table-column>
       <el-table-column prop="createTime" label="创建时间"></el-table-column>
-      <el-table-column fixed="right" width="380" label="操作">
+      <el-table-column fixed="right" width="480" label="操作">
         <template slot-scope="scope">
           <el-button size="small" v-if="scope.row.isLogin" type="success" :disabled="!!scope.row.hasTarget" @click="simLoginHandle(scope.row.linkId)">模拟登录</el-button>
           <el-button size="small" type="primary" :disabled="(!scope.row.hasTarget && !!scope.row.isLogin)" @click="spiderHandle(scope.row.linkId, scope.row.url)">单点采集</el-button>
           <el-button size="small" icon="el-icon-edit" @click="addOrUpdateHandle(scope.row.linkId)">编辑</el-button>
+          <el-button size="small" v-if="scope.row.isLogin" icon="el-icon-edit" @click="addCookie(scope.row.linkId,scope.row.system,scope.row.url)">cookie</el-button>
           <el-button size="small" icon="el-icon-delete" @click="deleteHandle(scope.row.linkId)">删除</el-button>
         </template>
       </el-table-column>
@@ -36,7 +37,9 @@
     </el-pagination>
     <!-- 弹窗, 新增 / 修改 -->
     <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList"></add-or-update>
-		<!-- 弹窗, 模拟登录 -->
+    <!-- 弹窗, cookie提写 -->
+    <add-cookie v-if="addCookieVisible" ref="addCookie"></add-cookie>
+	<!-- 弹窗, 模拟登录 -->
     <sim-login v-if="simLoginVisible" ref="simLogin" @refreshDataList="getDataList"></sim-login>
   </div>
 </template>
@@ -46,6 +49,7 @@ import API from '@/api';
 import { mapMutations } from 'vuex';
 import AddOrUpdate from './add-or-update';
 import SimLogin from './sim-login';
+import AddCookie from './add-cookie';
 export default {
 	data() {
 		return {
@@ -59,12 +63,14 @@ export default {
 			dataListLoading: false,
 			dataListSelections: [],
 			addOrUpdateVisible: false,
+			addCookieVisible: false,
 			simLoginVisible: false
 		};
 	},
 	components: {
 		AddOrUpdate,
-		SimLogin
+		SimLogin,
+		AddCookie
 	},
 	activated() {
 		this.getDataList();
@@ -111,6 +117,14 @@ export default {
 			this.$nextTick(() => {
 				this.$refs.addOrUpdate.init(id);
 			});
+		},
+		//新增cookie
+		addCookie(id,system,url){
+			this.addCookieVisible = true;
+			this.$nextTick(()=>{
+				this.$refs.addCookie.init(id,system,url);
+			})
+
 		},
 		// 删除
 		deleteHandle(id) {
