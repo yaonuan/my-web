@@ -61,8 +61,13 @@ export default {
 						if (data && data.code === 0) {
 							this.content = data.contents;
 							this.renderContent();
+						}else {
+							this.content = data.msg;
+							this.renderContent();
+							this.$message.error(data.msg);
 						}
 						this.dialogLoading = false;
+
 					});
 				}
 			});

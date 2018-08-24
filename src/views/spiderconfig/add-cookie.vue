@@ -68,14 +68,14 @@ export default {
 			this.dataForm.cookie = [];
 			this.dataForm.cookielist = 0;
 			//获取后端cookie数据
-			console.log(id);
 			this.$nextTick(() => {
 				this.$refs['dataForm'].resetFields();
 				if (this.dataForm.linkId) {
 					API.spiderconfig.test(this.dataForm.linkId).then(({ data }) => {
 						console.log('data', data);
 						if (data && data.code === 0) {
-							
+							this.dataForm.cookie = data.cookie;
+							this.dataForm.cookielist = data.length;
 						}
 					});
 				}
@@ -84,10 +84,19 @@ export default {
 
 		},
 		handleChange(value){
+			let i = 0;
+			let len = Math.abs(value - this.dataForm.cookielist)
 			if (value > this.dataForm.cookielist) {
-				this.dataForm.cookie.push({name: '', value: ''});
+				while (i < len) {
+					i+=1
+					this.dataForm.cookie.push({name: '', value: ''});
+				}
 			} else {
-				this.dataForm.cookie.splice(this.dataForm.cookie.length-1, 1)
+				while (i < len) {
+					i+=1
+					this.dataForm.cookie.splice(this.dataForm.cookie.length-1, 1)
+				}
+				
 			}
 			this.dataForm.cookielist = this.dataForm.cookie.length;
 			
