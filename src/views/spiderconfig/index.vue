@@ -38,7 +38,7 @@
     <!-- 弹窗, 新增 / 修改 -->
     <add-or-update v-if="addOrUpdateVisible" ref="addOrUpdate" @refreshDataList="getDataList"></add-or-update>
     <!-- 弹窗, cookie提写 -->
-    <add-cookie v-if="addCookieVisible" ref="addCookie"></add-cookie>
+    <add-cookie v-if="addCookieVisible" ref="addCookie" @refreshDataList="getDataList"></add-cookie>
 	<!-- 弹窗, 模拟登录 -->
     <sim-login v-if="simLoginVisible" ref="simLogin" @refreshDataList="getDataList"></sim-login>
   </div>
