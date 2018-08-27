@@ -80,9 +80,8 @@ export default {
 					});
 				}
 			});
-
-
 		},
+		//增减cookie的表格数
 		handleChange(value){
 			let i = 0;
 			let len = Math.abs(value - this.dataForm.cookielist)
