@@ -74,8 +74,11 @@ export default {
 
 			this.$nextTick(() => {
 				this.$refs['dataForm'].resetFields();
+				if (this.dataForm.id) {
+					this.getDataList();
+				}
 				this.getModuleList();
-				this.getDataList();
+				
 			});
 		},
 		// 获取系统模块列表
