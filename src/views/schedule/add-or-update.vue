@@ -97,7 +97,7 @@ export default {
 
 			if (this.dataForm.id) {
 				if (data && data.code === 0) {
-					this.dataForm.params = data.schedule.params;
+					this.dataForm.params = data.schedule.param;
 					//回显beanName、methodName
 					this.dataForm.beanName = data.schedule.beanName;
 					this.dataForm.methodName = data.schedule.methodName;

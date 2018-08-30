@@ -23,11 +23,12 @@
       style="width: 100%;">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
       <el-table-column prop="jobId" header-align="center" align="center" width="50" label="ID"></el-table-column>
-      <el-table-column prop="beanName" label="任务名称"></el-table-column>
+      <el-table-column width="80" prop="beanName" label="任务名称"></el-table-column>
+      <el-table-column width="250" prop="paramsName" label="任务具体名称"></el-table-column>
       <!-- <el-table-column prop="methodName" label="方法名称"></el-table-column> -->
       <el-table-column prop="createTime" label="任务时间"></el-table-column>
-      <el-table-column prop="cronExpression" label="cron表达式"></el-table-column>
-      <el-table-column prop="remark" label="任务描述"></el-table-column>
+      <el-table-column width="110" prop="cronExpression" label="cron表达式"></el-table-column>
+      <el-table-column width="130" prop="remark" label="任务描述"></el-table-column>
       <el-table-column prop="status" label="状态" width="70px">
         <template slot-scope="scope">
           <el-tag v-if="scope.row.status == 0" size="medium" type="success">正常</el-tag>

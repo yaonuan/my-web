@@ -21,7 +21,13 @@
           <el-button size="small" v-if="scope.row.isLogin" type="success" :disabled="!!scope.row.hasTarget" @click="simLoginHandle(scope.row.linkId)">模拟登录</el-button>
           <el-button size="small" type="primary" :disabled="(!scope.row.hasTarget && !!scope.row.isLogin)" @click="spiderHandle(scope.row.linkId, scope.row.url)">单点采集</el-button>
           <el-button size="small" icon="el-icon-edit" @click="addOrUpdateHandle(scope.row.linkId)">编辑</el-button>
-          <el-button size="small" v-if="scope.row.isLogin" icon="el-icon-edit-outline" @click="addCookie(scope.row.linkId,scope.row.system,scope.row.url)">cookie</el-button>
+          <el-button
+            size="small"
+            v-if="scope.row.isLogin"
+            icon="el-icon-edit-outline"
+            @click="addCookie(scope.row.linkId,scope.row.system,scope.row.url)"
+            :type="scope.row.hasTarget===2 ? 'danger' : ''"
+           >cookie</el-button>
           <el-button size="small" icon="el-icon-delete" @click="deleteHandle(scope.row.linkId)">删除</el-button>
         </template>
       </el-table-column>
