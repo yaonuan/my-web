@@ -24,7 +24,7 @@
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
       <el-table-column prop="jobId" header-align="center" align="center" width="50" label="ID"></el-table-column>
       <el-table-column width="80" prop="beanName" label="任务名称"></el-table-column>
-      <el-table-column width="250" prop="paramsName" label="任务具体名称"></el-table-column>
+      <el-table-column width="250" prop="paramsName" align="center" label="任务具体名称"></el-table-column>
       <!-- <el-table-column prop="methodName" label="方法名称"></el-table-column> -->
       <el-table-column prop="createTime" label="任务时间"></el-table-column>
       <el-table-column width="110" prop="cronExpression" label="cron表达式"></el-table-column>

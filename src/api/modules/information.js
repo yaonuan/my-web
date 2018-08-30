@@ -30,6 +30,15 @@ export function info(id) {
   })
 }
 
+// 设置模板详情
+export function details(id){
+  return request({
+    url: requestUrl('/api/pageInfo/template_details' + (isInteger(id) ? `/${id}` : '')),
+    method: 'get',
+    params: requestParam({},'get')
+  })
+}
+
 // 信息资源修改
 export function update (params) {
   return request({

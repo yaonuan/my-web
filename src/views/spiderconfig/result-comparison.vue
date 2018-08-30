@@ -10,10 +10,10 @@
     </el-form>
     <el-table :data="dataList" v-loading="dataListLoading" stripe border style="width: 100%;">
       <el-table-column type="index" header-align="center" align="center" width="60" label="编号"></el-table-column>
-      <el-table-column prop="system" label="系统名称"></el-table-column>
-      <el-table-column prop="module" label="模块名称"></el-table-column>
-      <el-table-column prop="createTime" label="采集时间"></el-table-column>
-      <el-table-column fixed="right" width="150" label="操作">
+      <el-table-column prop="system" align="center" label="系统名称"></el-table-column>
+      <el-table-column prop="module" align="center" label="模块名称"></el-table-column>
+      <el-table-column prop="createTime" align="center" label="采集时间"></el-table-column>
+      <el-table-column fixed="right" align="center" width="150" label="操作">
         <template slot-scope="scope">
           <el-button size="small" @click="linkHandle(scope.row.id, 'item')">查看</el-button>
           <el-button size="small" type="primary" @click="chooseTemplateHandle(scope.row.id)">比对</el-button>

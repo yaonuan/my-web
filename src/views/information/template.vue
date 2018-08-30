@@ -12,13 +12,14 @@
     </el-form>
     <el-table :data="dataList" v-loading="dataListLoading" @selection-change="selectionChangeHandle" stripe border style="width: 100%;">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
+      <el-table-column type="index" width="80" align="center" label="序号"></el-table-column>
       <el-table-column prop="system"  width="180" label="信息资源名称"></el-table-column>
       <el-table-column prop="module" width="180" label="信息资源模块名称"></el-table-column>
       <el-table-column width="180" prop="createTime" label="创建时间"></el-table-column>
       <el-table-column fixed="right" width="300" label="操作">
         <template slot-scope="scope">
           <el-button size="small" :type="scope.row.isModel ? '' : 'success'" @click="setTemplateHandle(scope.row.id)">{{scope.row.isModel ? '取消模板' : '设为模板'}}</el-button>
-          <el-button size="small" icon="el-icon-info" @click="addOrUpdateHandle(scope.row.linkId,scope.row.system)">详情</el-button>
+          <el-button size="small" icon="el-icon-info" @click="addOrUpdateHandle(scope.row.id,scope.row.system)">详情</el-button>
           <!-- <el-button size="small" icon="el-icon-edit" @click="addOrUpdateHandle(scope.row.id, true)">编辑</el-button> -->
          <!--  <el-button size="small" icon="el-icon-delete" @click="deleteHandle(scope.row.id)">删除</el-button> -->
         </template>
@@ -40,7 +41,7 @@
 
 <script>
 import API from '@/api';
-import AddOrUpdate from './add-or-update';
+import AddOrUpdate from './temlate-details';
 export default {
 	data() {
 		return {
