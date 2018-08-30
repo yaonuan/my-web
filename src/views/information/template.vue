@@ -13,9 +13,9 @@
     <el-table :data="dataList" v-loading="dataListLoading" @selection-change="selectionChangeHandle" stripe border style="width: 100%;">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
       <el-table-column type="index" width="80" align="center" label="序号"></el-table-column>
-      <el-table-column prop="system"  width="180" label="信息资源名称"></el-table-column>
-      <el-table-column prop="module" width="180" label="信息资源模块名称"></el-table-column>
-      <el-table-column width="180" prop="createTime" label="创建时间"></el-table-column>
+      <el-table-column prop="system"  width="180" align="center" label="信息资源名称"></el-table-column>
+      <el-table-column prop="module" width="180" align="center" label="信息资源模块名称"></el-table-column>
+      <el-table-column prop="createTime" width="180" align="center" label="创建时间"></el-table-column>
       <el-table-column fixed="right" width="300" label="操作">
         <template slot-scope="scope">
           <el-button size="small" :type="scope.row.isModel ? '' : 'success'" @click="setTemplateHandle(scope.row.id)">{{scope.row.isModel ? '取消模板' : '设为模板'}}</el-button>

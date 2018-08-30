@@ -12,10 +12,11 @@
     </el-form>
     <el-table :data="dataList" v-loading="dataListLoading" @selection-change="selectionChangeHandle" stripe border style="width: 100%;">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
-      <el-table-column prop="system" label="系统名称"></el-table-column>
-      <el-table-column prop="module" label="模块名称"></el-table-column>
-      <el-table-column prop="url" label="采集网址"></el-table-column>
-      <el-table-column prop="createTime" label="创建时间"></el-table-column>
+      <el-table-column type="index" align="center" width="60" label="编号"></el-table-column>
+      <el-table-column prop="system" align="center" label="系统名称"></el-table-column>
+      <el-table-column prop="module" align="center" label="模块名称"></el-table-column>
+      <el-table-column prop="url" align="center" label="采集网址"></el-table-column>
+      <el-table-column prop="createTime" align="center" label="创建时间"></el-table-column>
       <el-table-column fixed="right" width="480" label="操作">
         <template slot-scope="scope">
           <el-button size="small" v-if="scope.row.isLogin" type="success" :disabled="!!scope.row.hasTarget" @click="simLoginHandle(scope.row.linkId)">模拟登录</el-button>
