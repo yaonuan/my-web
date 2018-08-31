@@ -4,8 +4,24 @@
 			<el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="8">
 				<el-input v-model="url" readonly><template slot="prepend">采集网址</template></el-input>
 			</el-col>
-			<el-col :xs="12" :sm="12" :md="12" :lg="12" :xl="8">
+			<el-col :xs="5" :sm="5" :md="5" :lg="5" :xl="8">
 				<el-button type="primary" @click="confirmHandle()" v-if="content">开始采集</el-button>
+			</el-col>
+			<el-col :xs="3" :sm="3" :md="3" :lg="3" :xl="8">
+			  <el-select v-model="waite" clearable placeholder="请选择等待时间" v-if="content">
+			    <el-option
+			      v-for="item in options"
+			      :key="item.value"
+			      :label="item.label"
+			      :value="item.value">
+			    </el-option>
+			  </el-select>
+			</el-col>
+			<el-col :xs="2" :sm="2" :md="2" :lg="2" :xl="2">
+				<el-button type="primary"  v-if="content">下一步</el-button>
+			</el-col>
+			<el-col :xs="2" :sm="2" :md="2" :lg="2" :xl="2">
+				<el-button type="primary" @click="loginPageSubmit()"  v-if="content">确定</el-button>
 			</el-col>
 			<el-col :xs="24" style="marginTop: 20px;" v-loading="dialogLoading">
         <el-tooltip class="item" content="请点击表格头部进行采集" placement="top">
@@ -31,13 +47,40 @@ export default {
 			id: '',
 			url: '',
 			content: '',
+			waite: '',
 			texts: [],
 			spiderConfirmVisible: false,
-			dialogLoading: false
+			dialogLoading: false,
+			options: [{
+		          value: '2000',
+		          label: '2秒'
+		        }, {
+		          value: '4000',
+		          label: '4秒'
+		        }, {
+		          value: '6000',
+		          label: '6秒'
+		        }, {
+		          value: '8000',
+		          label: '8秒'
+		        }, {
+		          value: '10000',
+		          label: '10秒'
+		        }]
 		};
 	},
 	components: {
 		SpiderConfirm
+	},
+	watch: {
+		waite (val) {
+			// this.setSize();
+			// this.renderContent();
+			// this.startSpider();
+			if (val) {
+				this.getSpiderResult();
+			}
+		}
 	},
 	activated() {
 		this.getSpiderResult();
@@ -56,7 +99,7 @@ export default {
 			// console.log(this.id, this.url);
 			this.$nextTick(() => {
 				if (this.id) {
-					API.spiderconfig.spider({ linkId: this.id }).then(({ data }) => {
+					API.spiderconfig.spider({ linkId: this.id,waite: this.waite }).then(({ data }) => {
 						console.log('data', data);
 						if (data && data.code === 0) {
 							this.content = data.contents;
@@ -67,7 +110,6 @@ export default {
 							this.$message.error(data.msg);
 						}
 						this.dialogLoading = false;
-
 					});
 				}
 			});
@@ -99,7 +141,6 @@ export default {
 		startSpider() {
 			const that = this;
 			const thead = this.getTheadElement();
-
 			if (thead) {
 				thead.onclick = function() {
 					this.style.backgroundColor = '#17b3a3';
@@ -127,9 +168,7 @@ export default {
 		// 获取采集项目后弹窗采集项目列表
 		async spiderHandle() {
 			const texts = await this.getSpiderItems();
-
 			console.log('texts', texts);
-
 			if (texts.length > 0) {
 				this.spiderConfirmVisible = true;
 				this.$nextTick(() => {
@@ -140,17 +179,13 @@ export default {
 		// 从后台获取采集表头项目
 		async getSpiderItems() {
 			const thead = this.getTheadElement();
-
 			if (thead) {
 				const params = {
 					linkId: this.$store.state.spiderId,
 					xpath: getXPathForElement(thead).replace('html[1]', 'html')
 				};
-
 				thead.style.backgroundColor = '#17b3a3';
-
 				console.log('params', params);
-
 				try {
 					const res = await API.spiderconfig.getSpiderItems(params);
 					const data = await this.render(res.data);
@@ -171,7 +206,6 @@ export default {
 		// 获取thead元素
 		getTheadElement() {
 			const iframe = this.$refs.iframe;
-
 			if (iframe) {
 				const doc = iframe.contentWindow.document;
 				const tables = doc.getElementsByTagName('table');
@@ -179,7 +213,6 @@ export default {
 				for (const i in tables) {
 					if (tables.hasOwnProperty(i)) {
 						const table = tables[i];
-
 						if (
 							table.clientHeight > 0 &&
 							table.clientWidth > 0 &&
@@ -207,12 +240,10 @@ export default {
 				.getElementsByTagName('table')[0]
 				.getElementsByTagName('thead')[0]
 				.getElementsByTagName('tr')[0].children;
-
 			for (let i = 0; i < tr.length; i++) {
 				const element = tr[i];
 				texts.push(element.innerText);
 			}
-
 			this.texts = texts;
 		},
 		...mapMutations(['ADD_CONTENT_TAB', 'UPDATE_CONTENT_TABS'])
