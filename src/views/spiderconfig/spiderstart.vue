@@ -18,13 +18,13 @@
 			  </el-select>
 			</el-col>
 			<el-col :xs="2" :sm="2" :md="2" :lg="2" :xl="2">
-				<el-button type="primary" @click="nextStop()" v-if="content">下一步</el-button>
+				<el-button type="primary" :disabled="isNext" v-if="content" @click="isNext = true">下一步</el-button>
 			</el-col>
 			<el-col :xs="2" :sm="2" :md="2" :lg="2" :xl="2">
-				<el-button type="primary" @click="loginPageSubmit()"  v-if="content">确定</el-button>
+				<el-button type="primary" :disabled="!isNext" v-if="content" @click="reRenderHandle()">确定</el-button>
 			</el-col>
 			<el-col :xs="24" style="marginTop: 20px;" v-loading="dialogLoading">
-        <el-tooltip class="item" content="请点击表格头部进行采集" placement="top">
+        <el-tooltip class="item" :content="tooltipText" placement="top">
           <div id="spiderContent" class="spiderContent">
 						<iframe ref="iframe" id="iframe" frameborder="0" scrolling="auto" @load="loaded"></iframe>
 					</div>
@@ -49,36 +49,52 @@ export default {
 			content: '',
 			waite: '',
 			texts: [],
+			isNext: false, //是否点击了下一步，获取点击事件
+			button: '',
+			tooltipText: '请点击表格头部进行采集',
+			infoXPath: '', //详情的xpath
 			spiderConfirmVisible: false,
 			dialogLoading: false,
-			options: [{
-		          value: '2000',
-		          label: '2秒'
-		        }, {
-		          value: '4000',
-		          label: '4秒'
-		        }, {
-		          value: '6000',
-		          label: '6秒'
-		        }, {
-		          value: '8000',
-		          label: '8秒'
-		        }, {
-		          value: '10000',
-		          label: '10秒'
-		        }]
+			options: [
+				{
+					value: '2000',
+					label: '2秒'
+				},
+				{
+					value: '4000',
+					label: '4秒'
+				},
+				{
+					value: '6000',
+					label: '6秒'
+				},
+				{
+					value: '8000',
+					label: '8秒'
+				},
+				{
+					value: '10000',
+					label: '10秒'
+				}
+			]
 		};
 	},
 	components: {
 		SpiderConfirm
 	},
 	watch: {
-		waite (val) {
+		waite(val) {
 			// this.setSize();
 			// this.renderContent();
 			// this.startSpider();
 			if (val) {
 				this.getSpiderResult();
+			}
+		},
+		isNext(val) {
+			if (val) {
+				this.tooltipText = '采集详细信息：请依次点击“详情”按钮和“确定”按钮';
+				this.listenElement();
 			}
 		}
 	},
@@ -98,19 +114,23 @@ export default {
 			this.dialogLoading = true;
 			// console.log(this.id, this.url);
 			this.$nextTick(() => {
+				const params = {
+					linkId: this.id, 
+					waite: this.waite
+				}
 				if (this.id) {
-					API.spiderconfig.spider({ linkId: this.id,waite: this.waite }).then(({ data }) => {
-						// console.log('data', data);
-						if (data && data.code === 0) {
-							this.content = data.contents;
-							this.renderContent();
-						}else {
-							this.content = data.msg;
-							this.renderContent();
-							this.$message.error(data.msg);
-						}
-						this.dialogLoading = false;
-					});
+					API.spiderconfig.spider(params).then(({ data }) => {
+							console.log('data', data);
+							if (data && data.code === 0) {
+								this.content = data.contents;
+								this.renderContent();
+							} else {
+								this.content = data.msg;
+								this.renderContent();
+								this.$message.error(data.msg);
+							}
+							this.dialogLoading = false;
+						});
 				}
 			});
 		},
@@ -231,326 +251,76 @@ export default {
 				}
 			}
 		},
-		nextStop(){
-			this.listenElement();
-		},
-		// 登录页面提交填写的登录参数
-		loginPageSubmit() {
-			const params = this.getParams();
-			console.log('params', params);
+		// 开始采集详情信息，监听鼠标点击事件
+		listenElement() {
+			const self = this;
+			const iframe = this.$refs.iframe;
 
-			if (!params) {
-				this.$confirm(
-					`为了获取到最真实的数据，请按顺序填写登录帐号和密码，并点击“登录”按钮进行模拟登录，完成所有步骤后点击“确定”按钮提交。`,
-					'提示',
-					{
-						confirmButtonText: '',
-						showConfirmButton: false,
-						cancelButtonText: '明白了',
-						type: 'warning'
-					}
-				)
-					.then(() => {})
-					.catch(() => {});
-				return;
-			}
-
-			// this.isLoading = true;
-			this.dialogLoading = true;
-
-			/*API.spiderconfig.getLoginParams(params).then(({ data }) => {
-				if (data && data.code === 0) {
-					this.$message({
-						message: '模拟登录成功',
-						type: 'success',
-						duration: 1500,
-						onClose: () => {
-							this.visible = false;
-							this.$emit('refreshDataList');
-						}
-					});
-				} else {
-					this.$message.error(data.msg);
-				}
-
-				this.isLoading = false;
-				this.dialogLoading = false;
-			});*/
-		},
-		// 获取表单子元素的xpath，并返回一个params属性集
-		getParams() {
-			const parent = this.publicParent || this.getFormElement();
-			console.log('parent', parent);
-
-			if (parent) {
-				const tags = parent.getElementsByTagName('*');
-				const inputs = [];
-				const params = {
-					linkId: this.id
-				};
+			if (iframe && this.isNext) {
+				const doc = iframe.contentWindow.document;
+				const tags = doc.getElementsByTagName('*');
+				const buttons = [];
 
 				for (let i = 0; i < tags.length; i++) {
 					const element = tags[i];
 					const tagName = element.tagName;
 
-					// 筛选text或tel格式的
-					// 符合条件的input元素，并保存到一个数组中，
-					// 一般情况下用户名是在第一位,验证码是第二位
-					if (
-						tagName == 'INPUT' &&
-						(element.type == 'text' || element.type == 'tel') &&
-						element.clientWidth > 0 &&
-						element.clientHeight > 0
-					) {
-						inputs.push(element);
-					}
+					// 判断类型，只有button或a链接才能触发事件
+					if (tagName == 'BUTTON' || tagName == 'A') {
+						element.onclick = function(event) {
+							// 阻止默认提交事件
+							event.preventDefault();
 
-					// 密码框
-					if (
-						tagName == 'INPUT' &&
-						element.type == 'password' &&
-						element.clientWidth > 0 &&
-						element.clientHeight > 0
-					) {
-						params.password = element.value;
-						params.passwordXpath = getXPathForElement(element).replace(
-							'html[1]',
-							'html'
-						);
-					}
-
-					// 验证码图片
-					if (tagName == 'IMG') {
-						params.verifycodeUrl = element.src;
-					}
-				}
-
-				console.log('inputs', inputs);
-				params.username = inputs[0].value;
-				params.usernameXpath = getXPathForElement(inputs[0]).replace(
-					'html[1]',
-					'html'
-				);
-				params.verifycodeXpath = getXPathForElement(inputs[1]).replace(
-					'html[1]',
-					'html'
-				);
-
-				if (!params.username || !params.password) {
-					console.log('请填写帐号或密码。');
-					return;
-				}
-
-				// 登录按钮
-				console.log('button', this.button);
-				params.loginButtonXpath = getXPathForElement(this.button).replace(
-					'html[1]',
-					'html'
-				);
-
-				return params;
-			}
-		},
-		// 监听input键盘事件和button点击事件，
-		// 当输入文本信息的时候获取input元素的所有祖先元素，或按钮点击的时候获取该元素的所有祖先元素
-		// 然后根据这两组祖先元素作比较，获取最近的公共祖先元素
-		listenElement() {
-			const self = this;
-			const iframe = this.$refs.iframe;
-			// console.log('iframe', iframe);
-
-			if (iframe) {
-				const doc = iframe.contentWindow.document;
-				const inputs = doc.getElementsByTagName('input');
-				const tags = doc.getElementsByTagName('*');
-				const paths = [];
-				const Buttonpaths = [];
-
-				console.log('inputs', inputs);
-				console.log('inputs.length', inputs.length);
-				for (let i = 0; i < inputs.length; i++) {
-					const element = inputs[i];
-					const tagName = element.tagName;
-					console.log('inputselement', element);
-					// 筛选出输入框类型
-					if (
-						tagName == 'INPUT' &&
-						(element.type == 'text' ||
-							element.type == 'tel' ||
-							element.type == 'password') &&
-						element.clientWidth > 0 &&
-						element.clientHeight > 0
-					) {
-						// 监听键盘按下事件
-						element.onkeydown = function(event) {
 							var e =
 								event || window.event || arguments.callee.caller.arguments[0];
-							console.log('e', e);
-							// 把所有的祖先元素保存到paths临时数组中，然后只比较第一个
+
 							if (e) {
-								paths.push(e.path);
-								self.getPublicParent(
-									paths[paths.length - 1],
-									Buttonpaths[Buttonpaths.length - 1]
-								);
+								console.log('e', e);
+								const button = e.target || e.srcElement;
+								// 如果点击了图标元素，就获取它的父元素作为button
+								if (button.tagName == 'I') button = button.parentNode;
+
+								buttons.push(button);
+								self.getButton(buttons[buttons.length - 1]);
 							}
 						};
 					}
 				}
-
-				for (let i = 0; i < tags.length; i++) {
-					const element = tags[i];
-					const tagName = element.tagName;
-
-					// 根据约定的规则，最后一次点击是按钮
-					element.onclick = function(event) {
-						// 阻止默认提交事件
-						event.preventDefault();
-
-						var e =
-							event || window.event || arguments.callee.caller.arguments[0];
-
-						// 把所有的祖先元素保存到paths临时数组中，然后只比较最后一个
-						if (e) {
-							const button = e.target || e.srcElement;
-							Buttonpaths.push(e.path);
-							self.getPublicParent(
-								paths[paths.length - 1],
-								Buttonpaths[Buttonpaths.length - 1],
-								button
-							);
-						}
-					};
-				}
 			}
 		},
-		// 遍历input和button元素的祖先元素，获取最近的公共祖先元素
-		getPublicParent(paths, Buttonpaths, button) {
-			console.log('429paths', paths);
-			// console.log('430Buttonpaths', Buttonpaths);
-			if (paths && paths.length > 0 && Buttonpaths && Buttonpaths.length > 0) {
-				for (let i = 0; i < paths.length; i++) {
-					const path = paths[i];
-					for (let j = 0; j < Buttonpaths.length; j++) {
-						const bpath = Buttonpaths[j];
-						if (path == bpath) {
-							this.publicParent = path;
-							this.button = button;
-							return false;
-						}
-					}
-				}
+		// 获取按钮
+		getButton(button) {
+			console.log('getButton', button);
+			if (button) {
+				this.button = button;
 			}
 		},
-		// 筛选表单元素，只获取显示并且有子元素的表单，并返回一个form元素
-		getFormElement() {
-			const iframe = this.$refs.iframe;
-
-			if (iframe) {
-				const doc = iframe.contentWindow.document;
-				const forms = doc.getElementsByTagName('form');
-				// 遍历form元素，只获取显示的并且有子元素的form
-				for (const i in forms) {
-					if (forms.hasOwnProperty(i)) {
-						const form = forms[i];
-
-						if (
-							form.clientHeight > 0 &&
-							form.clientWidth > 0 &&
-							form.children.length > 0
-						) {
-							return form;
-						}
-					}
-				}
-			}
-		},
-		getParamsBackup() {
-			// 如果登录按钮是图片
-			if (
-				tagName == 'IMG' &&
-				element.hasAttribute('onclick') &&
-				(element.alt == '普通登录' || element.alt == '登录')
-			) {
-				params.loginButtonXpath = getXPathForElement(element).replace(
-					'html[1]',
-					'html'
-				);
-			}
-
-			// 登录按钮
-			// 这里以下几种情况：
-			// 1）元素是button
-			// 2）元素是input，并且类型是submit或button
-			// 3）元素是input，但没有类型，这种情况就去判断类名是否有btn了
-			// 4）元素是a，类名有btn
-			if (
-				tagName == 'BUTTON' ||
-				(tagName == 'INPUT' &&
-					(element.type == 'submit' || element.type == 'button')) ||
-				(tagName == 'INPUT' && this.hasClass(element, 'btn')) ||
-				(tagName == 'A' && this.hasClass(element, 'btn'))
-			) {
-				params.loginButtonXpath = getXPathForElement(element).replace(
-					'html[1]',
-					'html'
-				);
-			}
-		},
-		listenElementBackup() {
-			// 如果登录按钮是图片形式
-			if (
-				tagName == 'IMG' &&
-				element.hasAttribute('onclick') &&
-				(element.alt == '普通登录' || element.alt == '登录')
-			) {
-				// 按钮点击事件
-				element.onclick = function(event) {
-					// 阻止默认提交事件
-					event.preventDefault();
-
-					var e = event || window.event || arguments.callee.caller.arguments[0];
-
-					// 把所有的祖先元素保存到paths临时数组中，然后只比较最后一个
-					if (e) {
-						Buttonpaths.push(e.path);
-						self.getPublicParent(
-							paths[paths.length - 1],
-							Buttonpaths[Buttonpaths.length - 1]
-						);
-					}
+		// 获取详情的xpath，点击确定后，重新渲染页面
+		reRenderHandle() {
+			if (this.isNext && this.button) {
+				const params = {
+					linkId: this.$store.state.spiderId,
+					waite: this.waite,
+					xpath: getXPathForElement(this.button).replace('html[1]', 'html')
 				};
-			}
 
-			// 登录按钮
-			// 这里以下几种情况：
-			// 1）元素是button
-			// 2）元素是input，并且类型是submit或button
-			// 3）元素是input，但没有类型，这种情况就去判断类名是否有btn了
-			// 4）元素是a，类名有btn
-			if (
-				tagName == 'BUTTON' ||
-				(tagName == 'INPUT' &&
-					(element.type == 'submit' || element.type == 'button')) ||
-				(tagName == 'INPUT' && this.hasClass(element, 'btn')) ||
-				(tagName == 'A' && this.hasClass(element, 'btn'))
-			) {
-				// 按钮点击事件
-				element.onclick = function(event) {
-					// 阻止默认提交事件
-					event.preventDefault();
+				console.log('params', params);
 
-					var e = event || window.event || arguments.callee.caller.arguments[0];
+				this.dialogLoading = true;
 
-					// 把所有的祖先元素保存到paths临时数组中，然后只比较最后一个
-					if (e) {
-						Buttonpaths.push(e.path);
-						self.getPublicParent(
-							paths[paths.length - 1],
-							Buttonpaths[Buttonpaths.length - 1]
-						);
+				console.log("已安确定按钮~");
+				API.spiderconfig.spider(params).then(({ data }) => {
+					console.log('data', data);
+					if (data && data.code === 0) {
+						this.content = data.contents;
+						this.renderContent();
+					} else {
+						this.content = data.msg;
+						this.renderContent();
+						this.$message.error(data.msg);
 					}
-				};
+					this.dialogLoading = false;
+				});
 			}
 		},
 		// 从前端获取采集表头项目,

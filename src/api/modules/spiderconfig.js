@@ -14,9 +14,10 @@ export function list (params) {
   })
 }
 
-export function test(id){
+//获取手动输入的cookie
+export function gainCookie(id){
   return request({
-    url: requestUrl('/api/linkInfo/test' + (isInteger(id) ? `/${id}` : '')),
+    url: requestUrl('/api/linkInfo/gain_cookie' + (isInteger(id) ? `/${id}` : '')),
     method: 'get',
     params:requestParam({},'get')
   })
@@ -91,8 +92,16 @@ export function getLoginParams (params) {
 export function spider (params) {
   return request({
     url: requestUrl('/api/target/spdier_point'),
-    method: 'get',
-    params: requestParam(params, 'get', false)
+    method: 'post',
+    data: requestParam(params, 'post', false)
+  })
+}
+
+export function test (params) {
+  return request({
+    url: requestUrl('/api/target/test'),
+    method: 'post',
+    data: requestParam(params, 'post', false)
   })
 }
 

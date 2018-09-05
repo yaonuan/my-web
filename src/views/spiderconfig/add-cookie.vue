@@ -71,7 +71,7 @@ export default {
 			this.$nextTick(() => {
 				this.$refs['dataForm'].resetFields();
 				if (this.dataForm.linkId) {
-					API.spiderconfig.test(this.dataForm.linkId).then(({ data }) => {
+					API.spiderconfig.gainCookie(this.dataForm.linkId).then(({ data }) => {
 						console.log('data', data);
 						if (data && data.code === 0) {
 							this.dataForm.cookie = data.cookie;
