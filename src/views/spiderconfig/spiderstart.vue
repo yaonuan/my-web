@@ -5,7 +5,7 @@
 				<el-input v-model="url" readonly><template slot="prepend">采集网址</template></el-input>
 			</el-col>
 			<el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="8">
-				<el-button type="primary" @click="confirmHandle()" v-if="content">开始采集</el-button>
+				<el-button type="primary" @click="confirmHandle()" v-if="content">获取可见表头</el-button>
 			</el-col>
 			<el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="8">
 			  <el-select v-model="waite" clearable placeholder="请选择等待时间" v-if="content">
@@ -18,10 +18,10 @@
 			  </el-select>
 			</el-col>
 			<el-col :xs="2" :sm="2" :md="2" :lg="2" :xl="2">
-				<el-button type="primary" :disabled="isNext" v-if="content" @click="isNext = true">下一步</el-button>
+				<el-button type="primary" :disabled="isNext" v-if="content" @click="isNext = true">页面操作</el-button>
 			</el-col>
 			<el-col :xs="2" :sm="2" :md="2" :lg="2" :xl="2">
-				<el-button type="primary" :disabled="!isNext" v-if="content" @click="reRenderHandle()">确定</el-button>
+				<el-button type="primary" :disabled="!isNext" :loading="isLoading" v-if="content" @click="reRenderHandle()">{{isLoading ? "操作中" : "完成"}}</el-button>
 			</el-col>
 			<el-col :xs="24" style="marginTop: 20px;" v-loading="dialogLoading">
         <el-tooltip class="item" :content="tooltipText" placement="top">
@@ -55,6 +55,7 @@ export default {
 			infoXPath: '', //详情的xpath
 			spiderConfirmVisible: false,
 			dialogLoading: false,
+			isLoading: false,
 			options: [
 				{
 					value: '2000',
@@ -266,7 +267,8 @@ export default {
 					const tagName = element.tagName;
 
 					// 判断类型，只有button或a链接才能触发事件
-					if (tagName == 'BUTTON' || tagName == 'A') {
+					// if (tagName == 'BUTTON' || tagName == 'A') {
+					if (true) {
 						element.onclick = function(event) {
 							// 阻止默认提交事件
 							event.preventDefault();
@@ -305,7 +307,7 @@ export default {
 				};
 
 				console.log('params', params);
-
+				this.isLoading = true;
 				this.dialogLoading = true;
 
 				console.log("已安确定按钮~");
@@ -320,6 +322,8 @@ export default {
 						this.$message.error(data.msg);
 					}
 					this.dialogLoading = false;
+					this.isNext = false;
+					this.isLoading = false;
 				});
 			}
 		},
