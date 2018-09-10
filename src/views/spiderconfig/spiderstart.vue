@@ -5,7 +5,7 @@
 				<el-input v-model="url" readonly><template slot="prepend">采集网址</template></el-input>
 			</el-col>
 			<el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="8">
-				<el-button type="primary" @click="confirmHandle()" v-if="content">获取可见表头</el-button>
+				<el-button type="primary" @click="confirmHandle()" v-if="content">确定选择</el-button>
 			</el-col>
 			<el-col :xs="4" :sm="4" :md="4" :lg="4" :xl="8">
 			  <el-select v-model="waite" clearable placeholder="请选择等待时间" v-if="content">
@@ -51,6 +51,7 @@ export default {
 			texts: [],
 			isNext: false, //是否点击了下一步，获取点击事件
 			button: '',
+			elements: [],
 			tooltipText: '请点击表格头部进行采集',
 			infoXPath: '', //详情的xpath
 			spiderConfirmVisible: false,
@@ -106,7 +107,8 @@ export default {
 		loaded() {
 			this.setSize();
 			this.renderContent();
-			this.startSpider();
+			this.getChooseElement();
+			// this.startSpider();
 		},
 		// 根据id爬取到需要采集的页面
 		getSpiderResult() {
@@ -116,22 +118,22 @@ export default {
 			// console.log(this.id, this.url);
 			this.$nextTick(() => {
 				const params = {
-					linkId: this.id, 
+					linkId: this.id,
 					waite: this.waite
-				}
+				};
 				if (this.id) {
 					API.spiderconfig.spider(params).then(({ data }) => {
-							console.log('data', data);
-							if (data && data.code === 0) {
-								this.content = data.contents;
-								this.renderContent();
-							} else {
-								this.content = data.msg;
-								this.renderContent();
-								this.$message.error(data.msg);
-							}
-							this.dialogLoading = false;
-						});
+						console.log('data', data);
+						if (data && data.code === 0) {
+							this.content = data.contents;
+							this.renderContent();
+						} else {
+							this.content = data.msg;
+							this.renderContent();
+							this.$message.error(data.msg);
+						}
+						this.dialogLoading = false;
+					});
 				}
 			});
 		},
@@ -171,7 +173,7 @@ export default {
 		},
 		// 弹窗-询问是否开始采集
 		confirmHandle() {
-			this.$confirm('您已选中所有表头采集，是否进行下一步操作?', '操作提示', {
+			this.$confirm('您已选择了数据项，是否进行下一步操作?', '操作提示', {
 				confirmButtonText: '开始采集',
 				cancelButtonText: '取消',
 				type: 'warning'
@@ -199,14 +201,17 @@ export default {
 		},
 		// 从后台获取采集表头项目
 		async getSpiderItems() {
-			const thead = this.getTheadElement();
-			if (thead) {
+			// const thead = this.getTheadElement();
+			const xpaths = this.getElementsXpath();
+
+			if (xpaths) {
 				const params = {
 					linkId: this.$store.state.spiderId,
-					xpath: getXPathForElement(thead).replace('html[1]', 'html')
+					xpath: xpaths
 				};
-				thead.style.backgroundColor = '#17b3a3';
+
 				console.log('params', params);
+
 				try {
 					const res = await API.spiderconfig.getSpiderItems(params);
 					const data = await this.render(res.data);
@@ -222,6 +227,63 @@ export default {
 				return data.pageInfos;
 			} else {
 				this.$message.error(data.msg);
+			}
+		},
+		// 监听点击事件，获取选择的项目
+		getChooseElement() {
+			const self = this;
+			const iframe = this.$refs.iframe;
+
+			if (iframe) {
+				const doc = iframe.contentWindow.document;
+				const tags = doc.getElementsByTagName('*');
+				const elements = [];
+
+				for (let i = 0; i < tags.length; i++) {
+					const element = tags[i];
+					const tagName = element.tagName;
+
+					element.onclick = function(event) {
+						// 阻止默认提交事件
+						event.preventDefault();
+						event.stopPropagation();
+
+						var e =
+							event || window.event || arguments.callee.caller.arguments[0];
+
+						if (e) {
+							console.log('e', e);
+							const element = e.target || e.srcElement;
+							// 如果点击了图标元素，就获取它的父元素作为element
+							if (element.tagName == 'I') element = element.parentNode;
+
+							// 判断元素是否有isChoose类
+							if (self.hasClass(element, 'isChoose')) {
+								// 如果已经有这个类，就清空颜色，删除元素
+								element.style.backgroundColor = '';
+								self.removeClass(element, 'isChoose');
+								const index = self.elements.indexOf(element);
+								if (index > -1) {
+									self.elements.splice(index, 1);
+								}
+							} else {
+								// 否则添加颜色，添加元素
+								element.style.backgroundColor = '#17b3a3';
+								self.addClass(element, 'isChoose');
+								self.elements.push(element);
+							}
+
+							console.log('self.elements', self.elements);
+						}
+					};
+				}
+			}
+		},
+		getElementsXpath() {
+			if (this.elements.length > 0) {
+				return this.elements.map(item => {
+					return getXPathForElement(item).replace('html[1]', 'html');
+				});
 			}
 		},
 		// 获取thead元素
@@ -310,21 +372,46 @@ export default {
 				this.isLoading = true;
 				this.dialogLoading = true;
 
-				console.log("已安确定按钮~");
+				console.log('已安确定按钮~');
 				API.spiderconfig.spider(params).then(({ data }) => {
 					console.log('data', data);
 					if (data && data.code === 0) {
 						this.content = data.contents;
 						this.renderContent();
+						this.getChooseElement();
 					} else {
 						this.content = data.msg;
 						this.renderContent();
 						this.$message.error(data.msg);
 					}
+					this.elements = [];
 					this.dialogLoading = false;
 					this.isNext = false;
 					this.isLoading = false;
 				});
+			}
+		},
+		// 判断是否有这个类名
+		hasClass(ele, cls) {
+			return ele.className.match(new RegExp('(\\s|^)' + cls + '(\\s|$)'));
+		},
+		//为指定的dom元素添加样式
+		addClass(ele, cls) {
+			if (!this.hasClass(ele, cls)) ele.className += ' ' + cls;
+		},
+		//删除指定dom元素的样式
+		removeClass(ele, cls) {
+			if (this.hasClass(ele, cls)) {
+				var reg = new RegExp('(\\s|^)' + cls + '(\\s|$)'); //正则表达式，需要补血
+				ele.className = ele.className.replace(reg, ' ');
+			}
+		},
+		//如果存在(不存在)，就删除(添加)一个样式
+		toggleClass(ele, cls) {
+			if (this.hasClass(ele, cls)) {
+				this.removeClass(ele, cls);
+			} else {
+				this.addClass(ele, cls);
 			}
 		},
 		// 从前端获取采集表头项目,
