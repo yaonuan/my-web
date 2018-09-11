@@ -252,7 +252,7 @@ export default {
 							event || window.event || arguments.callee.caller.arguments[0];
 
 						if (e) {
-							console.log('e', e);
+							// console.log('e', e);
 							const element = e.target || e.srcElement;
 							// 如果点击了图标元素，就获取它的父元素作为element
 							if (element.tagName == 'I') element = element.parentNode;
@@ -334,29 +334,22 @@ export default {
 						element.onclick = function(event) {
 							// 阻止默认提交事件
 							event.preventDefault();
+							event.stopPropagation();
 
 							var e =
 								event || window.event || arguments.callee.caller.arguments[0];
 
 							if (e) {
-								console.log('e', e);
+								// console.log('e', e);
 								const button = e.target || e.srcElement;
 								// 如果点击了图标元素，就获取它的父元素作为button
 								if (button.tagName == 'I') button = button.parentNode;
 
-								buttons.push(button);
-								self.getButton(buttons[buttons.length - 1]);
+								self.button = button;
 							}
 						};
 					}
 				}
-			}
-		},
-		// 获取按钮
-		getButton(button) {
-			console.log('getButton', button);
-			if (button) {
-				this.button = button;
 			}
 		},
 		// 获取详情的xpath，点击确定后，重新渲染页面

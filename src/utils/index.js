@@ -116,7 +116,8 @@ export function getXPathForElement(element) {
     1;
   const segs = elm =>
     !elm || elm.nodeType !== 1 ? [''] :
-    elm.id && document.querySelector(`#${elm.id}`) === elm ? [`//*[@id="${elm.id}"]`] : [
+    // elm.id && document.querySelector(`#${elm.id}`) === elm ? [`//*[@id="${elm.id}"]`] : [
+    elm.id && document.getElementById(`${elm.id}`) === elm ? [`//*[@id="${elm.id}"]`] : [
       ...segs(elm.parentNode),
       `${elm.localName.toLowerCase()}[${idx(elm)}]`
     ];
